@@ -1,0 +1,6 @@
+{
+  "name": "스팀 대시보드",
+  "description": "An interactive dashboard to visualize your Steam profile. Analyze playtime, discover gaming habits with charts, and browse your entire game library.",
+  "requestFramePermissions": [],
+  "prompt": ""
+}
