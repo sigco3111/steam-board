@@ -14,6 +14,22 @@ import { RecommendationModal } from './components/RecommendationModal';
 const CACHE_KEY_PREFIX = 'steamDashboardCache';
 const CACHE_DURATION_MS = 3600 * 1000; // 1 hour
 
+// URL에서 Steam ID를 추출하는 함수
+const extractSteamIdFromUrl = (): string | null => {
+    const pathname = window.location.pathname;
+    const segments = pathname.split('/').filter(segment => segment.length > 0);
+    
+    // 마지막 세그먼트를 Steam ID로 간주
+    const lastSegment = segments[segments.length - 1];
+    
+    // Steam ID는 일반적으로 17자리 숫자로 구성됨 (64비트 SteamID)
+    if (lastSegment && /^\d{17}$/.test(lastSegment)) {
+        return lastSegment;
+    }
+    
+    return null;
+};
+
 const SkeletonCard: React.FC<{ className?: string }> = ({ className }) => (
     <div className={`bg-gray-700/50 animate-pulse rounded-xl ${className}`} />
 );
@@ -68,7 +84,19 @@ const DashboardSkeleton: React.FC = () => {
 
 
 const App: React.FC = () => {
-    const [steamApiKey, setSteamApiKey] = useState<string>(() => localStorage.getItem('steamApiKey') || '');
+    const [steamApiKey, setSteamApiKey] = useState<string>(() => {
+        // 환경 변수에서 API 키를 확인하고, 없으면 로컬 스토리지에서 확인
+        const envApiKey = process.env.STEAM_API_KEY;
+        const storedApiKey = localStorage.getItem('steamApiKey');
+        
+        // 환경 변수의 API 키가 있으면 로컬 스토리지에도 저장
+        if (envApiKey) {
+            localStorage.setItem('steamApiKey', envApiKey);
+            return envApiKey;
+        }
+        
+        return storedApiKey || '';
+    });
     
     const [steamId, setSteamId] = useState<string>('');
     const [playerSummary, setPlayerSummary] = useState<IPlayerSummary | null>(null);
@@ -109,6 +137,10 @@ const App: React.FC = () => {
             localStorage.setItem('steamId', searchSteamId);
             setPlayerSummary(summary);
             setSteamId(searchSteamId);
+            
+            // URL을 업데이트하여 Steam ID를 반영 (페이지 새로고침 없이)
+            const newUrl = `${window.location.origin}/${searchSteamId}`;
+            window.history.pushState({}, '', newUrl);
 
             const [gamesData, recentGamesData, badgesData] = await Promise.all([
                 getOwnedGames(searchSteamId, steamApiKey),
@@ -141,8 +173,27 @@ const App: React.FC = () => {
     }, [steamApiKey]);
 
     useEffect(() => {
+        // URL에서 Steam ID를 추출 (최우선)
+        const urlSteamId = extractSteamIdFromUrl();
+        
+        // 저장된 API 키와 Steam ID가 있는지 확인
         const savedApiKey = localStorage.getItem('steamApiKey');
         const savedSteamId = localStorage.getItem('steamId');
+        
+        // URL에 Steam ID가 있고 API 키가 설정되어 있으면 바로 검색
+        if (urlSteamId && savedApiKey) {
+            // URL의 Steam ID로 검색 실행
+            handleSearch(urlSteamId);
+            return;
+        }
+        
+        // URL에 Steam ID가 있지만 API 키가 없으면 Steam ID만 미리 설정
+        if (urlSteamId && !savedApiKey) {
+            setSteamId(urlSteamId);
+            return;
+        }
+        
+        // URL에 Steam ID가 없는 경우, 기존 로직 실행
         if (savedApiKey && savedSteamId) {
             const cachedDataString = localStorage.getItem(`${CACHE_KEY_PREFIX}_${savedSteamId}`);
             if(cachedDataString) {
@@ -158,6 +209,10 @@ const App: React.FC = () => {
                 }
             }
             handleSearch(savedSteamId);
+        }
+        // API 키는 있지만 Steam ID가 없는 경우, 초기 화면으로 이동할 수 있도록 함
+        else if (savedApiKey && !savedSteamId) {
+            // 필요한 상태 초기화는 이미 되어 있으므로 추가 작업 필요 없음
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
@@ -290,7 +345,11 @@ const App: React.FC = () => {
                     <ApiKeyInput onSave={handleApiKeySave} />
                 ) : (
                     <>
-                        <SteamIdInput onSearch={handleSearch} isLoading={isLoading} />
+                        <SteamIdInput 
+                            onSearch={handleSearch} 
+                            isLoading={isLoading}
+                            initialValue={steamId} 
+                        />
                 
                         {isLoading && <DashboardSkeleton />}
 

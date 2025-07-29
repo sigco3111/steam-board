@@ -1,13 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { LoadingSpinner, SearchIcon } from './Icons';
 
 interface SteamIdInputProps {
     onSearch: (steamId: string) => void;
     isLoading: boolean;
+    initialValue?: string; // URL에서 받은 Steam ID를 초기값으로 설정
 }
 
-export const SteamIdInput: React.FC<SteamIdInputProps> = ({ onSearch, isLoading }) => {
-    const [inputValue, setInputValue] = useState('');
+export const SteamIdInput: React.FC<SteamIdInputProps> = ({ onSearch, isLoading, initialValue = '' }) => {
+    const [inputValue, setInputValue] = useState(initialValue);
+
+    // initialValue가 변경되면 inputValue도 업데이트
+    useEffect(() => {
+        setInputValue(initialValue);
+    }, [initialValue]);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
