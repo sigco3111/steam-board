@@ -3,7 +3,7 @@
 
 **스팀 대시보드**는 사용자의 Steam 프로필 데이터를 시각적으로 분석하고 탐색할 수 있는 인터랙티브 웹 애플리케이션입니다. API 키와 Steam ID를 입력하기만 하면, 게임 라이브러리, 플레이 시간 통계, 도전 과제 달성률 등 다양한 정보를 한눈에 확인할 수 있습니다.
 
-실행주소1 : https://wordle-one-sigma.vercel.app/
+실행주소1 : https://steam-board.vercel.app/
 
 실행주소2 : https://dev-canvas-pi.vercel.app/
 
