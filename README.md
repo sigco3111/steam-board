@@ -5,7 +5,9 @@
 
 실행주소1 : https://steam-board.vercel.app/
 
-실행주소2 : https://dev-canvas-pi.vercel.app/
+실행주소2 : https://steam-board.vercel.app/76561198196399238
+
+실행주소3 : https://dev-canvas-pi.vercel.app/
 
 ---
 
