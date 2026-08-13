@@ -3,11 +3,11 @@
 
 **스팀 대시보드**는 사용자의 Steam 프로필 데이터를 시각적으로 분석하고 탐색할 수 있는 인터랙티브 웹 애플리케이션입니다. API 키와 Steam ID를 입력하기만 하면, 게임 라이브러리, 플레이 시간 통계, 도전 과제 달성률 등 다양한 정보를 한눈에 확인할 수 있습니다.
 
-실행주소1 : https://sigco3111.github.io/steam-board/
+라이브 데모 : https://sigco3111.github.io/steam-board/
 
-실행주소2 : https://sigco3111.github.io/steam-board/76561198196399238
+[![Live Demo](https://img.shields.io/badge/Live_Demo-GitHub%20Pages-222222?style=for-the-badge&logo=githubpages&logoColor=white)](https://sigco3111.github.io/steam-board/)
 
-실행주소3 : https://dev-canvas-pi.vercel.app/
+> ℹ️ **API 키 참고**: 빌드 시 `GEMINI_API_KEY` / `STEAM_API_KEY` 환경변수가 박히지 않으면 UI의 API 키 입력 필드에서 직접 입력해야 합니다 ([방법 2 — UI를 통한 설정](#3-api-키-설정) 참고). 브라우저 localStorage에 저장되며 별도 환경변수 없이도 작동합니다.
 
 ---
 
