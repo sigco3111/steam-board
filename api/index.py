@@ -1,24 +1,19 @@
-"""Vercel serverless CORS proxy for Steam Web API.
+"""Vercel serverless Python handler for CORS proxy.
 
-Pages의 정적 사이트에서 브라우저가 Steam API를 직접 호출하면 CORS로 차단됩니다.
-이 serverless 함수가 중간에서 우회:
-  - /api/steam?url=https://api.steampowered.com/ISteamUser/...
-  - 외부 Steam API 호출 + CORS 헤더 응답
-
-allorigins.win 등 공개 CORS 프록시는 자주 죽어서 자체 프록시 운영.
+Pages 정적 사이트가 Steam API 직접 호출 시 CORS로 차단됨.
+이 serverless가 중간에서 Steam API 호출 + CORS 헤더 응답.
 """
 
-import os
-from urllib.parse import urlencode
 import urllib.request
+from urllib.parse import urlparse
 
-# 환경변수로 시크릿 API 동작 (선택)
+
 ALLOWED_HOSTS = ('api.steampowered.com', 'store.steampowered.com')
 
 
 def handler(request):
-    """Vercel serverless Python handler."""
-    # CORS preflight (OPTIONS 요청)
+    """Vercel Python handler (flask-style)."""
+
     cors_headers = {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'GET, OPTIONS',
@@ -27,42 +22,21 @@ def handler(request):
     }
 
     if request.method == 'OPTIONS':
-        return {'statusCode': 200, 'headers': cors_headers, 'body': ''}
+        return ('OK', 200, cors_headers)
 
-    # ?url=... 또는 path parameter
-    target_url = (request.query or {}).get('url', '')
+    url = (request.args or {}).get('url', '')
+    if not url:
+        return ('{"error":"missing url query param"}', 400, {**cors_headers, 'Content-Type': 'application/json'})
 
-    if not target_url:
-        return {
-            'statusCode': 400,
-            'headers': {**cors_headers, 'Content-Type': 'application/json'},
-            'body': '{"error":"missing query parameter: url"}'
-        }
-
-    # host allowlist (보안)
-    from urllib.parse import urlparse
-    parsed = urlparse(target_url)
+    parsed = urlparse(url)
     if parsed.netloc not in ALLOWED_HOSTS:
-        return {
-            'statusCode': 403,
-            'headers': {**cors_headers, 'Content-Type': 'application/json'},
-            'body': f'{{"error":"host not allowed: {parsed.netloc}"}}'
-        }
+        return (f'{{"error":"host not allowed: {parsed.netloc}"}}', 403, {**cors_headers, 'Content-Type': 'application/json'})
 
     try:
-        # 외부 호출 (steam api로 사용자 API key 직접 forward)
-        req = urllib.request.Request(target_url, headers={'User-Agent': 'Mozilla/5.0'})
+        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
         with urllib.request.urlopen(req, timeout=20) as resp:
-            data = resp.read()
+            data = resp.read().decode('utf-8', errors='replace')
             content_type = resp.headers.get('Content-Type', 'application/json')
-        return {
-            'statusCode': 200,
-            'headers': {**cors_headers, 'Content-Type': content_type},
-            'body': data.decode('utf-8', errors='replace'),
-        }
+        return (data, 200, {**cors_headers, 'Content-Type': content_type})
     except Exception as e:
-        return {
-            'statusCode': 502,
-            'headers': {**cors_headers, 'Content-Type': 'application/json'},
-            'body': f'{{"error":"upstream failed: {str(e)}"}}'
-        }
+        return (f'{{"error":"upstream failed: {str(e)}"}}', 502, {**cors_headers, 'Content-Type': 'application/json'})
