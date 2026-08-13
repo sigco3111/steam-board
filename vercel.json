@@ -2,14 +2,13 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "functions": {
-    "api/index.py": {
+    "api/cors.py": {
       "runtime": "@vercel/python@3.10.4",
       "maxDuration": 30
     }
   },
   "rewrites": [
-    { "source": "/api/cors", "destination": "/api/index" },
-    { "source": "/api/cors/(.*)", "destination": "/api/index" },
+    { "source": "/api/(.*)", "destination": "/api/$1" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
