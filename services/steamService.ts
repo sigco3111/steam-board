@@ -20,10 +20,18 @@ import {
     INewsItem
 } from '../types';
 
+// CORS 프록시 설정 (Pages 정적 사이트는 Steam API 직접 호출이 CORS로 차단됨)
+// 환경변수로 활성/비활성 제어:
+//   VITE_USE_CORS_PROXY=true (기본, Pages 환경에서 안전) → corsproxy.io 경유
+//   VITE_USE_CORS_PROXY=false → Steam API 직접 호출 (Vercel 환경 또는 Steam API 키 로컬 테스트용)
+const USE_CORS_PROXY = String(import.meta.env.VITE_USE_CORS_PROXY ?? 'true').toLowerCase() !== 'false';
+const CORS_PROXY_PREFIX = 'https://corsproxy.io/?';
+
 // Helper function to handle fetch requests and errors
 async function fetchSteamAPI<T,>(url: string): Promise<T> {
+    const finalUrl = USE_CORS_PROXY ? `${CORS_PROXY_PREFIX}${encodeURIComponent(url)}` : url;
     try {
-        const response = await fetch(url);
+        const response = await fetch(finalUrl);
         if (!response.ok) {
             const errorBody = await response.text().catch(() => '(could not read error body)');
             throw new Error(`Steam API 요청 실패: ${response.status} ${response.statusText}. 응답: ${errorBody}`);
@@ -36,7 +44,7 @@ async function fetchSteamAPI<T,>(url: string): Promise<T> {
         return data;
     } catch (e: any) {
         if (e.message.includes('Failed to fetch')) {
-             throw new Error('네트워크 오류 또는 CORS 프록시 문제일 수 있습니다. 프록시 서버가 응답하지 않는 것 같습니다.');
+             throw new Error(`네트워크 오류 또는 CORS 프록시${USE_CORS_PROXY ? '(corsproxy.io)' : ''} 문제일 수 있습니다. 잠시 후 다시 시도하거나 Steam API 키/네트워크를 확인해주세요.`);
         }
         // Re-throw other errors, potentially from JSON parsing or the manual error thrown above
         throw e;
