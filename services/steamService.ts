@@ -28,9 +28,10 @@ const USE_CORS_PROXY = String(import.meta.env.VITE_USE_CORS_PROXY ?? 'true').toL
 // corsproxy.io → cors.eu.org(Cloudflare Workers 무료 티어) 경유로 rate-limited 됨 (2026-08-13 검증)
 // allorigins.win 으로 전환 (무료 + 비교적 안정적 캐시). 옵션: VITE_USE_CORS_PROXY=false 로 직접 호출도 가능
 // Vercel serverless 자체 CORS 프록시 (무료 + 안정적)
-// Pages에서 /api/cors?... URL을 호출 → Vercel이 Steam API 호출 후 CORS 헤더와 함께 응답
+// Pages 환경: https://steam-board.vercel.app/api/cors?... → Vercel이 Steam API 호출 후 CORS 응답
+// Vercel 환경(동일 host): 페이지가 Vercel 자체에서 서빙되므로 /api/cors도 Vercel에서 라우팅
 // local dev: vite proxy 설정 필요 (없을 시 CORS 에러 — 키 등록 후 동작)
-const CORS_PROXY_PREFIX = '/api/cors?url=';
+const CORS_PROXY_PREFIX = 'https://steam-board.vercel.app/api/cors?url=';
 
 // Helper function to handle fetch requests and errors
 async function fetchSteamAPI<T,>(url: string): Promise<T> {
