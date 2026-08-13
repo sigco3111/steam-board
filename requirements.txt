@@ -1,0 +1,2 @@
+# Vercel Python runtime 의존성
+# CORS proxy는 stdlib (urllib) 만 사용하지만 Vercel Python 빌드러가 인식하려면 필요
