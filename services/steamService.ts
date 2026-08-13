@@ -27,7 +27,10 @@ import {
 const USE_CORS_PROXY = String(import.meta.env.VITE_USE_CORS_PROXY ?? 'true').toLowerCase() !== 'false';
 // corsproxy.io → cors.eu.org(Cloudflare Workers 무료 티어) 경유로 rate-limited 됨 (2026-08-13 검증)
 // allorigins.win 으로 전환 (무료 + 비교적 안정적 캐시). 옵션: VITE_USE_CORS_PROXY=false 로 직접 호출도 가능
-const CORS_PROXY_PREFIX = 'https://api.allorigins.win/raw?url=';
+// Vercel serverless 자체 CORS 프록시 (무료 + 안정적)
+// Pages에서 /api/cors?... URL을 호출 → Vercel이 Steam API 호출 후 CORS 헤더와 함께 응답
+// local dev: vite proxy 설정 필요 (없을 시 CORS 에러 — 키 등록 후 동작)
+const CORS_PROXY_PREFIX = '/api/cors?url=';
 
 // Helper function to handle fetch requests and errors
 async function fetchSteamAPI<T,>(url: string): Promise<T> {
@@ -46,7 +49,7 @@ async function fetchSteamAPI<T,>(url: string): Promise<T> {
         return data;
     } catch (e: any) {
         if (e.message.includes('Failed to fetch')) {
-             throw new Error(`네트워크 오류 또는 CORS 프록시${USE_CORS_PROXY ? '(allorigins.win)' : ''} 문제일 수 있습니다. 잠시 후 다시 시도하거나 Steam API 키/네트워크를 확인해주세요.`);
+             throw new Error(`네트워크 오류 또는 자체 CORS 프록시${USE_CORS_PROXY ? '(Vercel /api/cors)' : ''} 문제일 수 있습니다. 잠시 후 다시 시도하거나 Steam API 키/네트워크를 확인해주세요.`);
         }
         // Re-throw other errors, potentially from JSON parsing or the manual error thrown above
         throw e;
