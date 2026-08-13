@@ -1,5 +1,14 @@
 {
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "functions": {
+    "api/index.py": {
+      "runtime": "@vercel/python@3.10.4"
+    }
+  },
   "rewrites": [
+    { "source": "/api/cors", "destination": "/api/index" },
+    { "source": "/api/cors/(.*)", "destination": "/api/index" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
-} 
+}
