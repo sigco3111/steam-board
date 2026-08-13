@@ -25,7 +25,9 @@ import {
 //   VITE_USE_CORS_PROXY=true (기본, Pages 환경에서 안전) → corsproxy.io 경유
 //   VITE_USE_CORS_PROXY=false → Steam API 직접 호출 (Vercel 환경 또는 Steam API 키 로컬 테스트용)
 const USE_CORS_PROXY = String(import.meta.env.VITE_USE_CORS_PROXY ?? 'true').toLowerCase() !== 'false';
-const CORS_PROXY_PREFIX = 'https://corsproxy.io/?';
+// corsproxy.io → cors.eu.org(Cloudflare Workers 무료 티어) 경유로 rate-limited 됨 (2026-08-13 검증)
+// allorigins.win 으로 전환 (무료 + 비교적 안정적 캐시). 옵션: VITE_USE_CORS_PROXY=false 로 직접 호출도 가능
+const CORS_PROXY_PREFIX = 'https://api.allorigins.win/raw?url=';
 
 // Helper function to handle fetch requests and errors
 async function fetchSteamAPI<T,>(url: string): Promise<T> {
@@ -44,7 +46,7 @@ async function fetchSteamAPI<T,>(url: string): Promise<T> {
         return data;
     } catch (e: any) {
         if (e.message.includes('Failed to fetch')) {
-             throw new Error(`네트워크 오류 또는 CORS 프록시${USE_CORS_PROXY ? '(corsproxy.io)' : ''} 문제일 수 있습니다. 잠시 후 다시 시도하거나 Steam API 키/네트워크를 확인해주세요.`);
+             throw new Error(`네트워크 오류 또는 CORS 프록시${USE_CORS_PROXY ? '(allorigins.win)' : ''} 문제일 수 있습니다. 잠시 후 다시 시도하거나 Steam API 키/네트워크를 확인해주세요.`);
         }
         // Re-throw other errors, potentially from JSON parsing or the manual error thrown above
         throw e;
